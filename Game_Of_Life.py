@@ -1,3 +1,4 @@
+
 #Idea to select squares manually: Use commands such a "left" or "down" and then ask how many spaces. Type "select" to change the square
 #Use a white scquare to indicate the location of the "cursor"
 
@@ -21,18 +22,20 @@ def buildRandomBoard(length, height, probability):
                 row.append(" ")
         board.append(row)
 
-#Prints the current board to console, but I want to change this in the future because you can see movement as each line prints :(
+#Prints the board with minimal flicker effect by combining it all into one string
 def printBoard():
-    print("\n" * 5)
+    boardToPrint = ""
     for row in range(len(board)):
         newLine = ""
         for col in range(len(board[0])):
-            newLine += board[row][col]
-        print(newLine)
+            boardToPrint += board[row][col]
+        boardToPrint += "\n"
+    print('')
+    print(boardToPrint)
 
 #Determines whether the requested cell is alive or dead
 def checkStatus(row, col, currentBoard):
-    if currentBoard[row][col][0] == '#':
+    if currentBoard[row][col] == '#':
         return 1
     else:
         return 0
@@ -101,14 +104,17 @@ def start():
 
     #These are the dimensions that happen to fit the Visual Studio console on my screen, I can add customization later
     gameLength = 148
-    gameHeight = 47
-    
+    gameHeight = 45
+
     buildRandomBoard(gameLength, gameHeight, startingProbability)
 
     #Change this later, this is just for testing purposes
-    for i in range(50):
+    for i in range(20):
         printBoard()
         updateBoard()
         time.sleep(0.5)
+        #This witchcraft does something that made the flicker go away
+        #It basically clears all the previous lines and then moves the cursor back up to the top
+        print('\033[47A\033[2K', end='')
 
 start()
