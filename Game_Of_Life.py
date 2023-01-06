@@ -2,15 +2,21 @@
 #Idea to select squares manually: Use commands such a "left" or "down" and then ask how many spaces. Type "select" to change the square
 #Use a white scquare to indicate the location of the "cursor"
 
+#Add customization to size of board
+
+#Add a detector if the simulation will take a significant amount of time
+
 import random
 import copy
 import time
+import sys
 
 board = []
 
 #Creates a board with each cell having a certain probability to start alive or dead
 def buildRandomBoard(length, height, probability):
     global board
+    board = []
 
     for y in range(height):
         row = []
@@ -42,7 +48,6 @@ def checkStatus(row, col, currentBoard):
 
 #I don't know how I made this part but I tried to add enough notes to understand it later...
 def updateBoard():
-    #y is row, x is col
     global board
     boardCopy = copy.deepcopy(board)
 
@@ -84,6 +89,13 @@ def updateBoard():
                 board[y + 1][x + 1] = ' '
                 continue
 
+def deleteLastLines(n):
+    CURSOR_UP_ONE = '\x1b[1A' 
+    ERASE_LINE = '\x1b[2K' 
+    for i in range(n): 
+        sys.stdout.write(CURSOR_UP_ONE) 
+        sys.stdout.write(ERASE_LINE) 
+
 def start():
     print("Welcome to my rendition of Conway's Game of Life!")
     print("Right now you cannot make your own board, but that might be added in the future.")
@@ -100,21 +112,74 @@ def start():
         if startingProbability not in range(101):
             print("Please enter a number between 0 and 100.")
             continue
-        break  
+        break
+
+    print('')
 
     #These are the dimensions that happen to fit the Visual Studio console on my screen, I can add customization later
+    #DO NOT change gameHeight at the moment or it will break
     gameLength = 148
-    gameHeight = 45
+    gameHeight = 43
 
     buildRandomBoard(gameLength, gameHeight, startingProbability)
 
-    #Change this later, this is just for testing purposes
-    for i in range(20):
+    printBoard()
+    updateBoard()
+
+    print('Type "auto" to play the simulation, or type "next" to go forward one step')
+    while True:
+        stepProgression = input()
+        while stepProgression.lower() == "next":
+            deleteLastLines(2)
+            #explanation of this line further down
+            print('\033[47A\033[2K', end='')
+            printBoard()
+            updateBoard()
+            print('Type "next" to advance to the next step. Type "auto" to play the simulation. Type "quit" to stop (Not yet implemented).')
+            stepProgression = input()
+
+        if stepProgression.lower() == "auto":
+            print("How many steps would you like to advance?")
+            #Validate user input
+            while True:
+                stepsToAdvance = input()
+                try:
+                    stepsToAdvance = int(stepsToAdvance)
+                except:
+                    print("Please use numeric digits.")
+                    continue
+                if stepsToAdvance < 1:
+                    print("Please enter a number greater than 0.")
+                    continue
+                break
+            break
+        else:
+            print('Please type either "next" or "auto"')
+
+    print("How much time, in seconds, should pass between steps? (A value around 0.5 is recommended)")
+    #Validate user input
+    while True:
+        sleepTime = input()
+        try:
+            sleepTime = float(sleepTime)
+        except:
+            print("Please use numeric digits.")
+            continue
+        if sleepTime <= 0:
+            print("Please enter a number greater than 0.")
+            continue
+        break
+    
+    #This ensures the first line clear of the for loop below doesn't mess anything up
+    print('\n' * (gameHeight + 1))
+
+    for i in range(stepsToAdvance):
+        #This witchcraft makes the flicker go away
+        #It basically clears all the previous lines and then moves the cursor back up to the top
+        print('\033[47A\033[2K', end='')        
         printBoard()
         updateBoard()
-        time.sleep(0.5)
-        #This witchcraft does something that made the flicker go away
-        #It basically clears all the previous lines and then moves the cursor back up to the top
-        print('\033[47A\033[2K', end='')
+        time.sleep(sleepTime)
+            
 
 start()
