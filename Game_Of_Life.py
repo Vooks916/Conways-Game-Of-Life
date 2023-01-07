@@ -96,6 +96,53 @@ def deleteLastLines(n):
         sys.stdout.write(CURSOR_UP_ONE) 
         sys.stdout.write(ERASE_LINE) 
 
+def playerOptions():
+    print('Type "auto" to play the simulation, or type "next" to go forward one step')
+    while True:
+        stepProgression = input()
+        while stepProgression.lower() == "next":
+            deleteLastLines(2)
+            #explanation of this line further down
+            print('\033[47A\033[2K', end='')
+            printBoard()
+            updateBoard()
+            print('Type "next" to advance to the next step. Type "auto" to play the simulation. Type "quit" to stop (Not yet implemented).')
+            stepProgression = input()
+
+        if stepProgression.lower() == "auto":
+            print("How many steps would you like to advance?")
+            #Validate user input
+            while True:
+                steps = input()
+                try:
+                    steps = int(steps)
+                except:
+                    print("Please use numeric digits.")
+                    continue
+                if steps < 1:
+                    print("Please enter a number greater than 0.")
+                    continue
+                break
+            break
+        else:
+            print('Please type either "next" or "auto"')
+
+    print("How much time, in seconds, should pass between steps? (A value around 0.5 is recommended)")
+    #Validate user input
+    while True:
+        time = input()
+        try:
+            time = float(time)
+        except:
+            print("Please use numeric digits.")
+            continue
+        if time <= 0:
+            print("Please enter a number greater than 0.")
+            continue
+        break
+
+    return [steps, time]
+
 def start():
     print("Welcome to my rendition of Conway's Game of Life!")
     print("Right now you cannot make your own board, but that might be added in the future.")
@@ -122,59 +169,52 @@ def start():
     gameHeight = 43
 
     buildRandomBoard(gameLength, gameHeight, startingProbability)
-
     printBoard()
     updateBoard()
 
-    print('Type "auto" to play the simulation, or type "next" to go forward one step')
     while True:
-        stepProgression = input()
-        while stepProgression.lower() == "next":
-            deleteLastLines(2)
-            #explanation of this line further down
-            print('\033[47A\033[2K', end='')
-            printBoard()
-            updateBoard()
-            print('Type "next" to advance to the next step. Type "auto" to play the simulation. Type "quit" to stop (Not yet implemented).')
-            stepProgression = input()
+        getNewChoices = False
+        playerOptionChoices = playerOptions()
+        stepsToAdvance = playerOptionChoices[0]
+        sleepTime = playerOptionChoices[1]
 
-        if stepProgression.lower() == "auto":
-            print("How many steps would you like to advance?")
-            #Validate user input
+        estimatedSimulationTime = stepsToAdvance * sleepTime
+
+        if estimatedSimulationTime < 60:
+            print("The estimated simulation time is %d seconds. Would you like to continue? (yes/no)" % (estimatedSimulationTime))
             while True:
-                stepsToAdvance = input()
-                try:
-                    stepsToAdvance = int(stepsToAdvance)
-                except:
-                    print("Please use numeric digits.")
-                    continue
-                if stepsToAdvance < 1:
-                    print("Please enter a number greater than 0.")
-                    continue
-                break
+                continueSimulation = input()
+                if continueSimulation.lower() == "yes":
+                    break
+                if continueSimulation.lower() == "no":
+                    getNewChoices = True
+                    break
+                else:
+                    print('Please type either "yes" or "no"')
+            if getNewChoices:
+                continue
             break
         else:
-            print('Please type either "next" or "auto"')
+            print("The estimated simulation time is %d minutes. Are you sure you want to continue? (yes/no)" % (estimatedSimulationTime / 60))
+            while True:
+                continueSimulation = input()
+                if continueSimulation.lower() == "yes":
+                    break
+                if continueSimulation.lower() == "no":
+                    getNewChoices = True
+                    break
+                else:
+                    print('Please type either "yes" or "no"')
+            if getNewChoices:
+                continue
+            break
 
-    print("How much time, in seconds, should pass between steps? (A value around 0.5 is recommended)")
-    #Validate user input
-    while True:
-        sleepTime = input()
-        try:
-            sleepTime = float(sleepTime)
-        except:
-            print("Please use numeric digits.")
-            continue
-        if sleepTime <= 0:
-            print("Please enter a number greater than 0.")
-            continue
-        break
     
     #This ensures the first line clear of the for loop below doesn't mess anything up
     print('\n' * (gameHeight + 1))
 
     for i in range(stepsToAdvance):
-        #This witchcraft makes the flicker go away
+        #This statement makes the flicker go away
         #It basically clears all the previous lines and then moves the cursor back up to the top
         print('\033[47A\033[2K', end='')        
         printBoard()
@@ -183,3 +223,8 @@ def start():
             
 
 start()
+
+# steps = 100
+# time = 1 second
+
+# steps * time = time in seconds for simulation to complete.
