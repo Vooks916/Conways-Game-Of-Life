@@ -4,8 +4,6 @@
 
 #Add customization to size of board
 
-#Add a detector if the simulation will take a significant amount of time
-
 import random
 import copy
 import time
@@ -178,10 +176,10 @@ def start():
         stepsToAdvance = playerOptionChoices[0]
         sleepTime = playerOptionChoices[1]
 
-        estimatedSimulationTime = stepsToAdvance * sleepTime
+        estimatedSimulationTime = (stepsToAdvance * sleepTime) + (0.02365 * stepsToAdvance) 
 
         if estimatedSimulationTime < 60:
-            print("The estimated simulation time is %d seconds. Would you like to continue? (yes/no)" % (estimatedSimulationTime))
+            print("The estimated simulation time is about %d seconds. Would you like to continue? (yes/no)" % (estimatedSimulationTime))
             while True:
                 continueSimulation = input()
                 if continueSimulation.lower() == "yes":
@@ -195,7 +193,7 @@ def start():
                 continue
             break
         else:
-            print("The estimated simulation time is %d minutes. Are you sure you want to continue? (yes/no)" % (estimatedSimulationTime / 60))
+            print("The estimated simulation time is about %d minutes. Are you sure you want to continue? (yes/no)" % (estimatedSimulationTime / 60))
             while True:
                 continueSimulation = input()
                 if continueSimulation.lower() == "yes":
@@ -223,8 +221,3 @@ def start():
             
 
 start()
-
-# steps = 100
-# time = 1 second
-
-# steps * time = time in seconds for simulation to complete.
