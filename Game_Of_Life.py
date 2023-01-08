@@ -2,7 +2,9 @@
 #Idea to select squares manually: Use commands such a "left" or "down" and then ask how many spaces. Type "select" to change the square
 #Use a white scquare to indicate the location of the "cursor"
 
-#Add customization to size of board
+#Add customization to size of board (Originaly is 148 by 43)
+
+#Clean up random hanging inputes after screen clears
 
 import random
 import copy
@@ -44,7 +46,6 @@ def checkStatus(row, col, currentBoard):
     else:
         return 0
 
-#I don't know how I made this part but I tried to add enough notes to understand it later...
 def updateBoard():
     global board
     boardCopy = copy.deepcopy(board)
@@ -88,20 +89,20 @@ def updateBoard():
                 continue
 
 def deleteLastLines(n):
-    CURSOR_UP_ONE = '\x1b[1A' 
-    ERASE_LINE = '\x1b[2K' 
+    cursorUpOne = '\x1b[1A' 
+    eraseLine = '\x1b[2K' 
     for i in range(n): 
-        sys.stdout.write(CURSOR_UP_ONE) 
-        sys.stdout.write(ERASE_LINE) 
+        sys.stdout.write(cursorUpOne) 
+        sys.stdout.write(eraseLine) 
 
-def playerOptions():
+def playerOptions(linesToClear):
     print('Type "auto" to play the simulation, or type "next" to go forward one step')
     while True:
         stepProgression = input()
         while stepProgression.lower() == "next":
             deleteLastLines(2)
             #explanation of this line further down
-            print('\033[47A\033[2K', end='')
+            print('\033[%dA\033[2K' % (linesToClear), end='')
             printBoard()
             updateBoard()
             print('Type "next" to advance to the next step. Type "auto" to play the simulation. Type "quit" to stop (Not yet implemented).')
@@ -115,7 +116,7 @@ def playerOptions():
                 try:
                     steps = int(steps)
                 except:
-                    print("Please use numeric digits.")
+                    print("Please enter a whole number with numeric digits.")
                     continue
                 if steps < 1:
                     print("Please enter a number greater than 0.")
@@ -141,9 +142,50 @@ def playerOptions():
 
     return [steps, time]
 
+def getDimensions():
+    print('Type "calibrate" to find optimal dimensions, or type "manual" to set your own dimensions.')
+    while True:
+        dimensionChoice = input()
+        if dimensionChoice.lower() == "manual":
+            print("Please enter the simulation width.\nWARNING: If width exceeds screen width, visuals of the simulation break.")
+            while True:
+                width = input()
+                try:
+                    width = int(width)
+                except:
+                    print("Please enter a whole number with numeric digits.")
+                    continue
+                if width < 2:
+                    print("Please enter a number greater than one.")
+                    continue
+                break
+            print("Please enter the simulation height.\nWARNING: If height exceeds screen height, visuals of the simulation break.")
+            while True:
+                height = input()
+                try:
+                    height = int(height)
+                except:
+                    print("Please enter a whole number with numeric digits.")
+                    continue
+                if height < 2:
+                    print("Please enter a number greater than one.")
+                    continue
+                break
+            break
+        if dimensionChoice.lower() == "calibrate":
+            print("Coming soon! Dimensions have been set to 148 x 43.")
+            width = 148
+            height = 43
+            break
+        else:
+            print('Please type either "calibrate" or "manual"')
+    return [width, height]
+
 def start():
     print("Welcome to my rendition of Conway's Game of Life!")
-    print("Right now you cannot make your own board, but that might be added in the future.")
+    dimensions = getDimensions()
+    gameLength = dimensions[0]
+    gameHeight = dimensions[1]
     print("To start, please type the probability (0-100) that any square begins the game alive!")
     
     #Validate user input
@@ -152,7 +194,7 @@ def start():
         try:
             startingProbability = int(startingProbability)
         except:
-            print("Please use numeric digits.")
+            print("Please enter a whole number with numeric digits.")
             continue
         if startingProbability not in range(101):
             print("Please enter a number between 0 and 100.")
@@ -161,25 +203,21 @@ def start():
 
     print('')
 
-    #These are the dimensions that happen to fit the Visual Studio console on my screen, I can add customization later
-    #DO NOT change gameHeight at the moment or it will break
-    gameLength = 148
-    gameHeight = 43
-
+    linesToClear = gameHeight + 2 
     buildRandomBoard(gameLength, gameHeight, startingProbability)
     printBoard()
     updateBoard()
 
     while True:
         getNewChoices = False
-        playerOptionChoices = playerOptions()
+        playerOptionChoices = playerOptions(linesToClear)
         stepsToAdvance = playerOptionChoices[0]
         sleepTime = playerOptionChoices[1]
 
         estimatedSimulationTime = (stepsToAdvance * sleepTime) + (0.02365 * stepsToAdvance) 
 
         if estimatedSimulationTime < 60:
-            print("The estimated simulation time is about %d seconds. Would you like to continue? (yes/no)" % (estimatedSimulationTime))
+            print("The estimated simulation time is about %d second(s). Would you like to continue? (yes/no)" % (estimatedSimulationTime))
             while True:
                 continueSimulation = input()
                 if continueSimulation.lower() == "yes":
@@ -193,7 +231,7 @@ def start():
                 continue
             break
         else:
-            print("The estimated simulation time is about %d minutes. Are you sure you want to continue? (yes/no)" % (estimatedSimulationTime / 60))
+            print("The estimated simulation time is about %d minute(s). Are you sure you want to continue? (yes/no)" % (estimatedSimulationTime / 60))
             while True:
                 continueSimulation = input()
                 if continueSimulation.lower() == "yes":
@@ -214,7 +252,7 @@ def start():
     for i in range(stepsToAdvance):
         #This statement makes the flicker go away
         #It basically clears all the previous lines and then moves the cursor back up to the top
-        print('\033[47A\033[2K', end='')        
+        print('\033[%dA\033[2K' % (linesToClear), end='')        
         printBoard()
         updateBoard()
         time.sleep(sleepTime)
