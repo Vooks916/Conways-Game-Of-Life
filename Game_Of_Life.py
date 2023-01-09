@@ -2,7 +2,7 @@
 #Idea to select squares manually: Use commands such a "left" or "down" and then ask how many spaces. Type "select" to change the square
 #Use a white scquare to indicate the location of the "cursor"
 
-#Add customization to size of board (Originaly is 148 by 43)
+#Add auto calibrate board size
 
 #Clean up random hanging inputes after screen clears
 
@@ -73,7 +73,6 @@ def updateBoard():
                     if x + j >= len(boardCopy[0]):
                         #When adding x to j below, j will be 2, so set x to -2 to ensure final x coordinate is 0
                         x = -2
-    
                     #checkStatus returns 1 if the cell is alive, and 0 if not
                     aliveNeighbors += checkStatus(y + i, x + j, boardCopy)
 
@@ -96,19 +95,19 @@ def deleteLastLines(n):
         sys.stdout.write(eraseLine) 
 
 def playerOptions(linesToClear):
-    print('Type "auto" to play the simulation, or type "next" to go forward one step')
+    print('Type "1" to auto-play the simulation, or type "2" to go forward one step')
     while True:
         stepProgression = input()
-        while stepProgression.lower() == "next":
+        while stepProgression == "2":
             deleteLastLines(2)
             #explanation of this line further down
             print('\033[%dA\033[2K' % (linesToClear), end='')
             printBoard()
             updateBoard()
-            print('Type "next" to advance to the next step. Type "auto" to play the simulation. Type "quit" to stop (Not yet implemented).')
+            print('Type "1" to auto-play the simulation. Type "2" to advance to the next step. Type "3" to quit (Not yet implemented).')
             stepProgression = input()
 
-        if stepProgression.lower() == "auto":
+        if stepProgression.lower() == "1":
             print("How many steps would you like to advance?")
             #Validate user input
             while True:
@@ -124,7 +123,7 @@ def playerOptions(linesToClear):
                 break
             break
         else:
-            print('Please type either "next" or "auto"')
+            print('Please type either "1" "2" or "3"')
 
     print("How much time, in seconds, should pass between steps? (A value around 0.5 is recommended)")
     #Validate user input
@@ -143,10 +142,10 @@ def playerOptions(linesToClear):
     return [steps, time]
 
 def getDimensions():
-    print('Type "calibrate" to find optimal dimensions, or type "manual" to set your own dimensions.')
+    print('Type "1" to find optimal dimensions, or type "2" to set your own dimensions.')
     while True:
         dimensionChoice = input()
-        if dimensionChoice.lower() == "manual":
+        if dimensionChoice == "2":
             print("Please enter the simulation width.\nWARNING: If width exceeds screen width, visuals of the simulation break.")
             while True:
                 width = input()
@@ -155,8 +154,8 @@ def getDimensions():
                 except:
                     print("Please enter a whole number with numeric digits.")
                     continue
-                if width < 2:
-                    print("Please enter a number greater than one.")
+                if width < 3:
+                    print("Please enter a number greater than two.")
                     continue
                 break
             print("Please enter the simulation height.\nWARNING: If height exceeds screen height, visuals of the simulation break.")
@@ -167,18 +166,121 @@ def getDimensions():
                 except:
                     print("Please enter a whole number with numeric digits.")
                     continue
-                if height < 2:
-                    print("Please enter a number greater than one.")
+                if height < 3:
+                    print("Please enter a number greater than two.")
                     continue
                 break
             break
-        if dimensionChoice.lower() == "calibrate":
-            print("Coming soon! Dimensions have been set to 148 x 43.")
-            width = 148
-            height = 43
+        if dimensionChoice.lower() == "1":
+            print("First let's find your maximum width.")
+            print()
+            print('A "#" will be printed on your screen. Hit enter to advance it one space to the right.')
+            print('When it reaches the end of the screen and gets printed back on the left side, type "1"')
+            print('If you need to go backwards a space, type "2"')
+            print()
+            print('You may now begin. Please press enter until the "#" loops back to the left side')
+            print()
+            widthTest = "#"
+            while True:
+                redoTest = False
+                print(widthTest)
+                userInput = input()
+
+                if userInput == "":
+                    widthTest = " " + widthTest
+                    deleteLastLines(2)
+                    continue
+                if userInput == "2":
+                    if widthTest[0] != "#":
+                        widthTest = widthTest.replace(' ', '', 1)
+                        deleteLastLines(2)
+                        continue
+                if userInput == "1":
+                    deleteLastLines(1)
+                    if len(widthTest) > 1:
+                        print("^")
+                        print('|  Is this arrow currently pointing at the "#"? (y/n)')
+                        print("|")
+                        while True:
+                            correctLocation = input()
+                            if correctLocation[0].lower() == "y":
+                                break
+                            if correctLocation[0].lower() == "n":
+                                redoTest = True
+                                print('Please adjust the "#" so it reaches the end of the screen and loops back to the left side.')
+                                break
+                            else:
+                                print('Please type either "y" or "n"')
+                        
+                        if redoTest:
+                            continue
+                        break
+                    else:
+                        print('You have not advanced the "#" yet!')
+                        print('Hit enter to advance the "#" until it passes the end of your screen.')
+                        continue 
+                else:
+                    print('Please only hit enter, or type "1" or "2"')
+                    continue
+            width = len(widthTest) - 1
+
+            print("\nNow let's find your maximum height.")
+            print()
+            print('Some messages will be printed on your screen. Hit enter to advance them one space up.')
+            print('When the message saying "STOP WHEN I DISAPPEAR" goes off-screen, type "1"')
+            print('If you go too far, type "2" redo the height test')
+            print()
+            print('You may now begin. Please press enter until only the final message remains on screen')
+            print()
+            heightTest = 1
+            while True:
+                if heightTest == 1:
+                    print("WARNING, STOP SOON")
+                    print("WARNING, STOP SOON")
+                    print("WARNING, STOP SOON")
+                    print("STOP WHEN I DISAPPEAR")
+                    print('TYPE "1" WHEN YOU CAN ONLY SEE ME')
+                redoTest = False
+                userInput = input()
+
+                if userInput == "":
+                    heightTest += 1
+                    print()
+                    deleteLastLines(1)
+                    continue
+                if userInput == "2":
+                    heightTest = 1
+                    print("Disregard any messages above this statement. Please redo the height test now.")
+                    continue
+                if userInput == "1":
+                    deleteLastLines(1)
+                    if heightTest > 1:
+                        print('Is the only message remaining at the top of the screen "TYPE "1" WHEN YOU CAN ONLY SEE ME" (y/n)')
+                        while True:
+                            correctLocation = input()
+                            if correctLocation[0].lower() == "y":
+                                break
+                            if correctLocation[0].lower() == "n":
+                                redoTest = True
+                                break
+                            else:
+                                print('Please type either "y" or "n"')
+                        
+                        if redoTest:
+                            heightTest = 1
+                            print("Disregard any messages above this statement. Please redo the height test now.")
+                            continue
+                        break
+                    else:
+                        print('You have not advanced the messages yet!')
+                        print('Hit enter to advance the messages until only the last one remains.')
+                        continue 
+                else:
+                    print('Please type either "1" or "2"')
+                    continue
+            print(heightTest)
+            height = heightTest - 3
             break
-        else:
-            print('Please type either "calibrate" or "manual"')
     return [width, height]
 
 def start():
@@ -187,7 +289,6 @@ def start():
     gameLength = dimensions[0]
     gameHeight = dimensions[1]
     print("To start, please type the probability (0-100) that any square begins the game alive!")
-    
     #Validate user input
     while True:
         startingProbability = input()
@@ -217,30 +318,30 @@ def start():
         estimatedSimulationTime = (stepsToAdvance * sleepTime) + (0.02365 * stepsToAdvance) 
 
         if estimatedSimulationTime < 60:
-            print("The estimated simulation time is about %d second(s). Would you like to continue? (yes/no)" % (estimatedSimulationTime))
+            print("The estimated simulation time is about %d second(s). Would you like to continue? (y/n)" % (estimatedSimulationTime))
             while True:
                 continueSimulation = input()
-                if continueSimulation.lower() == "yes":
+                if continueSimulation[0].lower() == "y":
                     break
-                if continueSimulation.lower() == "no":
+                if continueSimulation[0].lower() == "n":
                     getNewChoices = True
                     break
                 else:
-                    print('Please type either "yes" or "no"')
+                    print('Please type either "(y)es" or "(n)o"')
             if getNewChoices:
                 continue
             break
         else:
-            print("The estimated simulation time is about %d minute(s). Are you sure you want to continue? (yes/no)" % (estimatedSimulationTime / 60))
+            print("The estimated simulation time is about %d minute(s). Are you sure you want to continue? (y/n)" % (estimatedSimulationTime / 60))
             while True:
                 continueSimulation = input()
-                if continueSimulation.lower() == "yes":
+                if continueSimulation[0].lower() == "y":
                     break
-                if continueSimulation.lower() == "no":
+                if continueSimulation[0].lower() == "n":
                     getNewChoices = True
                     break
                 else:
-                    print('Please type either "yes" or "no"')
+                    print('Please type either "y" or "n"')
             if getNewChoices:
                 continue
             break
